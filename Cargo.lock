@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "my-first-os"
+name = "my1os"
 version = "0.1.0"
 dependencies = [
  "bootloader 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
