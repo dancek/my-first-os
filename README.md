@@ -6,3 +6,4 @@ Writing a simple OS with the tutorials at https://os.phil-opp.com/
 
 - build: `cargo xbuild`
 - build and run with QEMU: `cargo xrun`
+- tests: `cargo xtest`
