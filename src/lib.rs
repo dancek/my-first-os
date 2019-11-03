@@ -10,16 +10,21 @@ pub mod vga_buffer;
 use core::panic::PanicInfo;
 
 pub fn test_runner(tests: &[&dyn Fn()]) {
-    serial_println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
+    let count = tests.len();
+    if count > 0 {
+        serial_println!("\nRunning {} tests", count);
+        for (i, test) in tests.iter().enumerate() {
+            serial_print!("{:>3}/{:<3}", i+1, count);
+            test();
+        }
+        serial_println!();
     }
     exit_qemu(QemuExitCode::Success);
 }
 
 pub fn test_panic_handler(info: &PanicInfo) -> ! {
-    serial_println!("[failed]\n");
-    serial_println!("Error: {}\n", info);
+    serial_println!("[failed]");
+    serial_println!("    Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }
@@ -53,4 +58,20 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
         let mut port = Port::new(0xf4);
         port.write(exit_code as u32);
     }
+}
+
+// test suite helper
+#[macro_export]
+macro_rules! tests {
+    {$($name:ident $body:block)*} => {
+        $(
+            #[cfg(test)]
+            #[test_case]
+            fn $name() {
+                $crate::serial_print!("{:60} ", stringify!($name));
+                $body
+                $crate::serial_println!("[ok]");
+            }
+        )*
+    };
 }

@@ -5,7 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use my1os::{println, serial_print, serial_println};
+use my1os::{println, tests};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -19,9 +19,8 @@ fn panic(info: &PanicInfo) -> ! {
     my1os::test_panic_handler(info)
 }
 
-#[test_case]
-fn test_println() {
-    serial_print!("test_println... ");
-    println!("test_println output");
-    serial_println!("[ok]");
+tests! {
+    test_println {
+        println!("test_println output");
+    }
 }
