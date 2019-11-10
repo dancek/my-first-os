@@ -17,18 +17,14 @@ pub extern "C" fn _start() -> ! {
     test_main();
 
     println!("It did not crash!");
-    loop {
-        use my1os::serial_print;
-        for _ in 0..10000 {}
-        serial_print!("-");
-    }
+    my1os::hlt_loop();
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    my1os::hlt_loop();
 }
 
 #[cfg(test)]

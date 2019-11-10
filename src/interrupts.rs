@@ -1,8 +1,7 @@
 use lazy_static::lazy_static;
 use pic8259_simple::ChainedPics;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
-use crate::{print, println, tests};
-use crate::gdt;
+use crate::{gdt, hlt_loop, print, println, tests};
 
 pub const PIC_1_OFFSET: u8 = 32;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
@@ -67,7 +66,8 @@ extern "x86-interrupt" fn breakpoint_handler(
 extern "x86-interrupt" fn double_fault_handler(
     stack_frame: &mut InterruptStackFrame, _error_code: u64
 ) {
-    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+    println!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+    hlt_loop();
 }
 
 tests! {
