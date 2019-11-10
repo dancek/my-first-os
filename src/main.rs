@@ -17,7 +17,11 @@ pub extern "C" fn _start() -> ! {
     test_main();
 
     println!("It did not crash!");
-    loop {}
+    loop {
+        use my1os::serial_print;
+        for _ in 0..10000 {}
+        serial_print!("-");
+    }
 }
 
 #[cfg(not(test))]
