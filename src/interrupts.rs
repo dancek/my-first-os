@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 use pic8259_simple::ChainedPics;
-use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+use x86_64::structures::idt::{
+    InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 use crate::{gdt, hlt_loop, print, println, tests};
 
 pub const PIC_1_OFFSET: u8 = 32;
@@ -37,6 +38,7 @@ lazy_static! {
 
         // exceptions
         idt.breakpoint.set_handler_fn(breakpoint_handler);
+        idt.page_fault.set_handler_fn(page_fault_handler);
         let dfh = idt.double_fault.set_handler_fn(double_fault_handler);
         unsafe { dfh.set_stack_index(gdt::DOUBLE_FAULT_IST_INDEX); }
 
@@ -49,6 +51,38 @@ lazy_static! {
         idt
     };
 }
+
+///////////////////////////////////////////////////////////////////////
+/// Exception handlers
+
+extern "x86-interrupt" fn breakpoint_handler(
+    stack_frame: &mut InterruptStackFrame
+) {
+    println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
+}
+
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: &mut InterruptStackFrame, _error_code: u64
+) {
+    println!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+    hlt_loop();
+}
+
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: &mut InterruptStackFrame,
+    error_code: PageFaultErrorCode
+) {
+    use x86_64::registers::control::Cr2;
+
+    println!("EXCEPTION: PAGE FAULT");
+    println!("Accessed address: {:?}", Cr2::read());
+    println!("Error code: {:?}", error_code);
+    println!("{:?}", stack_frame);
+    hlt_loop();
+}
+
+///////////////////////////////////////////////////////////////////////
+/// Interrupt handlers
 
 extern "x86-interrupt" fn timer_interrupt_handler(
     _stack_frame: &mut InterruptStackFrame
@@ -91,19 +125,6 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
     }
 }
 
-
-extern "x86-interrupt" fn breakpoint_handler(
-    stack_frame: &mut InterruptStackFrame
-) {
-    println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
-}
-
-extern "x86-interrupt" fn double_fault_handler(
-    stack_frame: &mut InterruptStackFrame, _error_code: u64
-) {
-    println!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
-    hlt_loop();
-}
 
 tests! {
     test_breakpoint_exception {
